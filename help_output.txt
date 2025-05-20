@@ -1,0 +1,65 @@
+Summary of Python Scripts for Spectrometer Analysis
+===================================================
+
+1. comparespectra_trial.py
+--------------------------
+A comprehensive CLI tool for comparing and fitting spectrometer data.
+
+Main Features:
+- Plotting and comparing multiple samples with optional wavelength range.
+- Normalization by integration time or maximum within a range.
+- Overlay Gaussian peaks.
+- Fit Gaussian, Lorentzian, or Voigt profiles.
+- Custom color mapping and labeling.
+
+How to run:
+    python comparespectra_trial.py -compare 500 800 m1.1 m1.2 -r -b -lin
+    python comparespectra_trial.py -gaussian_fit 600 800 m1.1_NOBP_1500
+    python comparespectra_trial.py -compare_norm_max 600 800 m1.3 m1.4 latex myplot -log
+    python comparespectra_trial.py -preview_colors
+    python comparespectra_trial.py -help
+
+---
+
+2. FWHM_harmonics.py
+--------------------
+Visualizes how the Full Width at Half Maximum (FWHM) shrinks for higher-order harmonics of a fundamental Gaussian in the wavelength domain.
+
+Main Features:
+- Plots Gaussian for 3000 nm pulse and 2nd–5th harmonics.
+- Demonstrates n⁻² scaling of FWHM.
+
+How to run:
+    python FWHM_harmonics.py
+
+---
+
+3. intensity_Scan.py
+---------------------
+Plots intensity scans for a given base sample across multiple power levels.
+
+Main Features:
+- Automatically normalizes by integration time (optional).
+- Optionally overlay a reference sample.
+- Supports linear/log scale and wavelength cropping.
+
+How to run:
+    python intensity_Scan.py m6.1
+    python intensity_Scan.py 450 1100 m6.1 -ref m1.1_NOBP_1000 -logy
+    python intensity_Scan.py m6.1 -sub BP -ref m3.1_BP_2000
+
+---
+
+4. z_score.py
+-------------
+Evaluates statistical significance of peaks compared to noise in spectrometer data.
+
+Main Features:
+- Normalize spectra by integration time.
+- Plot histogram of noise region (λ ≤ 400 nm).
+- Compute Z-score of peaks in user-specified wavelength range.
+
+How to run:
+    python z_score.py -normalise_int_time m1.1_NOBP_1000 m2.1_NOBP_2000
+    python z_score.py -noise_hist m1.1_NOBP_1000
+    python z_score.py -z_score 600 700 m1.1_NOBP_1000
