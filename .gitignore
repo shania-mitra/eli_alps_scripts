@@ -1,3 +1,7 @@
+# Ignore these files
+20240212_Spect_BaF2_520_Si_650_-18.8k_-110k_5.8W_4CM_afternoon.txt
+20240215_Spect_BaF2_520_Si_650_-18.8k_-110k_5.8W_4CM_afternoon.txt
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
