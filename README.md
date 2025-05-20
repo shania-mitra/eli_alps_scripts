@@ -56,18 +56,6 @@ python comparespectra.py -compare 500 1100 ZnOref_NOBP_1500 m1.3_NOBP_1500 -gaus
 
 ---
 
-## 📌 To-Do List (Prioritized)
-
-- [ ] Implement moving averages across all spectra
-- [ ] Define and apply ALS baseline for ZnOref
-- [ ] Fit single Gaussian peak (post-baseline)
-- [ ] Fit multiple overlapping harmonics
-- [ ] Extract FWHM and plot vs harmonic order
-- [ ] Overlay harmonic peaks for ZnOref across power levels
-- [ ] Normalize laser spectra using acquisition time
-- [ ] Interpret TIPTOE spectra cautiously (no direct HHG mapping)
-
----
 
 ## 🗂️ Example Folder Structure
 
@@ -107,12 +95,7 @@ This can be modified in `plot_style.py`.
 
 **Shania Mitra**  
 Master’s Thesis – High-Harmonic Generation in Structured Solids  
-ELI-ALPS & University of Göttingen  
+University of Hamburg 
 May 2025
 
 ---
-
-## 📄 License
-
-This code is for academic and research use. Please cite or credit appropriately.
-

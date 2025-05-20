@@ -127,8 +127,13 @@ class SpectrumGUI:
                 raise ValueError("Enter at least one sample.")
     
             # --- Plotting Ranges ---
-            range_min = float(self.range_min_entry.get()) if self.range_min_entry.get().strip() else None
-            range_max = float(self.range_max_entry.get()) if self.range_max_entry.get().strip() else None
+            try:
+                range_min_raw = self.range_min_entry.get().strip()
+                range_max_raw = self.range_max_entry.get().strip()
+                range_min = float(range_min_raw) if range_min_raw else None
+                range_max = float(range_max_raw) if range_max_raw else None
+            except ValueError:
+                raise ValueError("Plot Range Min and Max must be valid numbers (e.g. 450, 1100).")
     
             # --- Flags ---
             no_norm = not self.norm_time_var.get()
@@ -141,20 +146,16 @@ class SpectrumGUI:
             lam = float(self.baseline_lam_entry.get().strip()) if self.baseline_lam_entry.get().strip() else 1e5
             p = float(self.baseline_p_entry.get().strip()) if self.baseline_p_entry.get().strip() else 0.01
     
+            # --- Laser Spectrum Overlay ---
             show_laser = bool(self.show_laser_var.get())
             laser_range = None
-            
             if show_laser:
                 laser_min_raw = self.laser_min_entry.get().strip()
                 laser_max_raw = self.laser_max_entry.get().strip()
                 laser_min = float(laser_min_raw) if laser_min_raw else None
                 laser_max = float(laser_max_raw) if laser_max_raw else None
-            
-                if laser_min is None and laser_max is None:
-                    laser_range = None  # Allow plotting full range
-                else:
-                    laser_range = (laser_min, laser_max)
-
+                laser_range = (laser_min, laser_max) if (laser_min or laser_max) else None
+    
             # --- Gaussian Overlay ---
             gaussians = []
             if all([self.overlay_fwhm.get(), self.overlay_amp.get(), self.overlay_center.get(), self.overlay_range.get()]):
@@ -206,6 +207,7 @@ class SpectrumGUI:
     
         except Exception as e:
             messagebox.showerror("Error", str(e))
+
 
 
 
