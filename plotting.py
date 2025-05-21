@@ -6,15 +6,15 @@ import os
 from spectra_io import read_scope_corrected, discover_files
 from colors import assign_colors_for_plot, get_sample_description
 from plot_style import PLOT_STYLE
-from baseline_correction import baseline_als
+from baseline_correction import baseline_als, baseline_airpls
 from laser_spectrum import load_laser_spectrum
 from smoothing import moving_average
 
 
 def plot_selected_samples(sample_list, color_tags=None, save_as=None, range_min=None, range_max=None,
-                          no_norm=False, gaussian_overlays=None, apply_baseline=False,
+                          no_norm=False, gaussian_overlays=None, apply_baseline=False, baseline_method="ALS",
                           lam=1e5, p=0.01, log_y=True, show_laser=False, laser_path=None,
-                          laser_range=None, smooth_window=5, smooth=False):
+                          laser_range=None, smooth_window=5, smooth=False, air_lam=1e5, air_iter=15):
 
 
     file_map = discover_files()
@@ -40,10 +40,19 @@ def plot_selected_samples(sample_list, color_tags=None, save_as=None, range_min=
         corrected = scope_corrected if no_norm else (scope_corrected / integration_time)
 
         if apply_baseline:
-            corrected = corrected - baseline_als(corrected, lam=lam, p=p)
+            if baseline_method == "ALS":
+                baseline = baseline_als(corrected, lam=lam, p=p)
+            elif baseline_method == "airPLS":
+                baseline = baseline_airpls(corrected, lambda_=air_lam, itermax=air_iter)
+            else:
+                raise ValueError(f"Unknown baseline method: {baseline_method}")
+            corrected = corrected - baseline
+    
         if smooth:
             corrected = moving_average(corrected, window_size=smooth_window)
+        
         print(f"[DEBUG] Pre-thresholding stats: min={corrected.min()}, max={corrected.max()}, any NaNs={np.isnan(corrected).any()}")
+
 
 
         corrected = np.maximum(corrected, 0)

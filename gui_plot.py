@@ -34,6 +34,23 @@ class SpectrumGUI:
         tk.Checkbutton(root, text="Log Scale Y-Axis", variable=self.log_y_var).grid(row=4, column=0, sticky="w")
         tk.Checkbutton(root, text="Overlay Laser Spectrum", variable=self.show_laser_var).grid(row=5, column=0, sticky="w")
         tk.Checkbutton(root, text="Apply Moving Average Smoothing", variable=self.smooth_var).grid(row=6, column=0, sticky="w")
+        
+        # airPLS lambda
+        tk.Label(root, text="airPLS lambda:").grid(row=8, column=2, sticky="e")
+        self.airpls_lam_entry = tk.Entry(root)
+        self.airpls_lam_entry.insert(0, "1e5")  # default value
+        self.airpls_lam_entry.grid(row=8, column=2, sticky="w")
+        
+        # airPLS iterations
+        tk.Label(root, text="airPLS iterations:").grid(row=9, column=2, sticky="e")
+        self.airpls_iter_entry = tk.Entry(root)
+        self.airpls_iter_entry.insert(0, "15")  # default value
+        self.airpls_iter_entry.grid(row=9, column=2, sticky="w")
+      
+        
+        tk.Label(root, text="Baseline Method:").grid(row=7, column=2, sticky="e")
+        self.baseline_method = tk.StringVar(value="ALS")
+        tk.OptionMenu(root, self.baseline_method, "ALS", "airPLS").grid(row=7, column=3, sticky="w")
 
         tk.Label(root, text="Smoothing Window:").grid(row=2, column=1, sticky="e")
         self.smooth_window_entry = tk.Entry(root)
@@ -145,9 +162,15 @@ class SpectrumGUI:
             # --- ALS Parameters ---
             lam = float(self.baseline_lam_entry.get().strip()) if self.baseline_lam_entry.get().strip() else 1e5
             p = float(self.baseline_p_entry.get().strip()) if self.baseline_p_entry.get().strip() else 0.01
-    
+            
+            #-----airPLS Parameters----
+            air_lam = float(self.airpls_lam_entry.get().strip()) if self.airpls_lam_entry.get().strip() else 1e5
+            air_iter = int(self.airpls_iter_entry.get().strip()) if self.airpls_iter_entry.get().strip() else 15
+
             # --- Laser Spectrum Overlay ---
             show_laser = bool(self.show_laser_var.get())
+            method = self.baseline_method.get()
+
             laser_range = None
             if show_laser:
                 laser_min_raw = self.laser_min_entry.get().strip()
@@ -165,7 +188,6 @@ class SpectrumGUI:
                 rmin, rmax = map(float, self.overlay_range.get().split())
                 gaussians.append({"fwhm": fwhm, "amplitude": amp, "center": center, "min_wl": rmin, "max_wl": rmax, "label": "Overlay"})
     
-            # --- Plot ---
             plot_selected_samples(
                 sample_list=samples,
                 color_tags=None,
@@ -182,8 +204,12 @@ class SpectrumGUI:
                 laser_path=HARDCODED_LASER_PATH,
                 laser_range=laser_range,
                 smooth=smooth,
-                smooth_window=smooth_window
+                smooth_window=smooth_window,
+                baseline_method=method,
+                air_lam=air_lam,
+                air_iter=air_iter       # ✅ this is the missing line
             )
+
     
             # --- Optional Fit ---
             fit_type = self.fit_type.get()
