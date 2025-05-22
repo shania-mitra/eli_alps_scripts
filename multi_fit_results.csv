@@ -1,0 +1,4 @@
+harmonic_order,center,FWHM,amplitude
+3,955.3538895701813,"<Parameter 'fwhm', value=40.40674898745809 +/- 0.887, bounds=[-inf:inf], expr='1.0692*gamma+sqrt(0.8664*gamma**2+5.545083*sigma**2)'>",2654562.396170051
+4,730.0305204103853,"<Parameter 'fwhm', value=27.732790487507692 +/- 0.378, bounds=[-inf:inf], expr='1.0692*gamma+sqrt(0.8664*gamma**2+5.545083*sigma**2)'>",1341482.8854364266
+5,580.2826150782417,"<Parameter 'fwhm', value=24.27188659208023 +/- 0.684, bounds=[-inf:inf], expr='1.0692*gamma+sqrt(0.8664*gamma**2+5.545083*sigma**2)'>",308636.1362161768

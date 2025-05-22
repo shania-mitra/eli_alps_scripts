@@ -179,5 +179,6 @@ def plot_selected_samples_norm_max(sample_list, range_min, range_max, plot_full_
         print(f"Plot saved to: {export_path}")
     else:
         plt.show()
+        
 
 

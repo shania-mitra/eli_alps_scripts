@@ -11,12 +11,27 @@ import sys
 
 from plotting import plot_selected_samples
 from fitting import gaussian_fit, lorentzian_fit, voigt_fit
+from multi_peak_fit import multi_peak_fit_extract_plot
+
 from laser_spectrum import HARDCODED_LASER_PATH
 
 class SpectrumGUI:
     def __init__(self, root):
         self.root = root
         self.root.title("Spectra Plotting GUI")
+        # --- Multi-peak Fit Section ---
+        tk.Label(root, text="Multi-Harmonic Fit Ranges (min max order, comma-separated):").grid(row=21, column=0, columnspan=2)
+        self.multi_fit_ranges = tk.Entry(root, width=50)
+        self.multi_fit_ranges.grid(row=22, column=0, columnspan=2)
+        self.multi_fit_ranges.insert(0, "500 530 6, 570 600 5, 630 670 4")  # example
+        
+        tk.Label(root, text="Model for Multi-Fit:").grid(row=23, column=0, sticky="e")
+        self.multi_fit_model = ttk.Combobox(root, values=["Gaussian", "Lorentzian", "Voigt"])
+        self.multi_fit_model.grid(row=23, column=1)
+        self.multi_fit_model.current(0)
+        
+        tk.Button(root, text="Run Multi-Fit", command=self.run_multi_fit).grid(row=24, column=0, columnspan=2, pady=5)
+
 
         # --- Normalization Options ---
         self.norm_time_var = tk.BooleanVar(value=True)
@@ -39,13 +54,13 @@ class SpectrumGUI:
         tk.Label(root, text="airPLS lambda:").grid(row=8, column=2, sticky="e")
         self.airpls_lam_entry = tk.Entry(root)
         self.airpls_lam_entry.insert(0, "1e5")  # default value
-        self.airpls_lam_entry.grid(row=8, column=2, sticky="w")
+        self.airpls_lam_entry.grid(row=8, column=3, sticky="w")
         
         # airPLS iterations
         tk.Label(root, text="airPLS iterations:").grid(row=9, column=2, sticky="e")
         self.airpls_iter_entry = tk.Entry(root)
         self.airpls_iter_entry.insert(0, "15")  # default value
-        self.airpls_iter_entry.grid(row=9, column=2, sticky="w")
+        self.airpls_iter_entry.grid(row=9, column=3, sticky="w")
       
         
         tk.Label(root, text="Baseline Method:").grid(row=7, column=2, sticky="e")
@@ -135,6 +150,59 @@ class SpectrumGUI:
 
         # --- Submit Button ---
         tk.Button(root, text="Plot", command=self.submit).grid(row=20, column=0, columnspan=3, pady=10)
+        
+    def run_multi_fit(self):
+        try:
+            sample = self.sample_entry.get().strip()
+            if not sample:
+                raise ValueError("Enter a sample for multi-fit.")
+    
+            # --- Parse ranges ---
+            raw = self.multi_fit_ranges.get().strip()
+            if not raw:
+                raise ValueError("Enter harmonic fit ranges.")
+            chunks = raw.split(",")
+            ranges = []
+            harmonics = []
+            for chunk in chunks:
+                parts = list(map(float, chunk.strip().split()))
+                if len(parts) != 3:
+                    raise ValueError("Each entry must have min max order")
+                ranges.append((parts[0], parts[1]))
+                harmonics.append(int(parts[2]))
+    
+            # --- Model type ---
+            model = self.multi_fit_model.get()
+    
+            # --- Flags and Params ---
+            no_norm = not self.norm_time_var.get()
+            apply_baseline = self.baseline_correct_var.get()
+            method = self.baseline_method.get()
+            lam = float(self.baseline_lam_entry.get())
+            p = float(self.baseline_p_entry.get())
+            air_lam = float(self.airpls_lam_entry.get())
+            air_iter = int(self.airpls_iter_entry.get())
+    
+            # --- Run fitting logic ---
+            from fitting import multi_peak_fit_extract_plot
+            multi_peak_fit_extract_plot(
+                label=sample,
+                ranges=ranges,
+                harmonic_orders=harmonics,
+                model_type=model,
+                no_norm=no_norm,
+                apply_baseline=apply_baseline,
+                baseline_method=method,
+                lam=lam,
+                p=p,
+                air_lam=air_lam,
+                air_iter=air_iter,
+                save_csv="multi_fit_results.csv"
+            )
+    
+        except Exception as e:
+            messagebox.showerror("Multi-Fit Error", str(e))
+
 
     def submit(self):
         try:
@@ -216,20 +284,22 @@ class SpectrumGUI:
             fit_min = self.fit_min_entry.get()
             fit_max = self.fit_max_entry.get()
             fit_sample = self.fit_sample_entry.get().strip()
-    
+            
             if fit_type != "None" and fit_min and fit_max and fit_sample:
                 fit_min = float(fit_min)
                 fit_max = float(fit_max)
-    
+            
                 if fit_sample not in samples:
                     raise ValueError(f"Sample '{fit_sample}' not in plotted sample list.")
-    
+            
                 if fit_type == "Gaussian":
-                    gaussian_fit(fit_min, fit_max, fit_sample, no_norm)
+                    gaussian_fit(fit_min, fit_max, fit_sample, no_norm, apply_baseline, method, lam, p, air_lam, air_iter)
                 elif fit_type == "Lorentzian":
-                    lorentzian_fit(fit_min, fit_max, fit_sample, no_norm)
+                    lorentzian_fit(fit_min, fit_max, fit_sample, no_norm, apply_baseline, method, lam, p, air_lam, air_iter)
                 elif fit_type == "Voigt":
-                    voigt_fit(fit_min, fit_max, fit_sample, no_norm)
+                    voigt_fit(fit_min, fit_max, fit_sample, no_norm, apply_baseline, method, lam, p, air_lam, air_iter)
+
+
     
         except Exception as e:
             messagebox.showerror("Error", str(e))
