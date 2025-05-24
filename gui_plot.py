@@ -184,7 +184,6 @@ class SpectrumGUI:
             air_iter = int(self.airpls_iter_entry.get())
     
             # --- Run fitting logic ---
-            from fitting import multi_peak_fit_extract_plot
             multi_peak_fit_extract_plot(
                 label=sample,
                 ranges=ranges,

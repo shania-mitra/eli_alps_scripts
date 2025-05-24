@@ -24,14 +24,27 @@ I0 = gaussian(wl, lambda0, fwhm0)
 
 plt.figure(figsize=(10, 6))
 plt.plot(wl, I0, '--', color='gray', label='Fundamental (3000 nm)', linewidth=2)
+fwhm_list = [] 
 
 # --- Plot harmonics ---
 colors = ['#1f77b4', '#2ca02c', '#d62728', '#9467bd']
 for i, n in enumerate([2, 3, 4, 5]):
     center = lambda0 / n
     fwhm_n = fwhm0 / (n ** 2)
+    fwhm_list.append(fwhm_n)
     I_n = gaussian(wl, center, fwhm_n)
     plt.plot(wl, I_n, label=f"{n}ω ({center:.0f} nm, FWHM={fwhm_n:.1f} nm)", color=colors[i], linewidth=2)
+
+plt.figure(figsize=(6, 4))
+plt.scatter([2, 3, 4, 5], fwhm_list, color='black')
+plt.xlabel("Harmonic Order")
+plt.ylabel("FWHM [nm]")
+plt.title("FWHM Shrinkage with Harmonic Order")
+plt.grid(True)
+plt.tight_layout()
+plt.show()
+
+
 
 plt.xlabel("Wavelength (nm)", fontsize=14)
 plt.ylabel("Spectral Intensity (a.u.)", fontsize=14)
