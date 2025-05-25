@@ -12,25 +12,33 @@ import sys
 from plotting import plot_selected_samples
 from fitting import gaussian_fit, lorentzian_fit, voigt_fit
 from multi_peak_fit import multi_peak_fit_extract_plot
-
+from laser_fwhm_vs_harmonic import plot_sample_fwhm_vs_harmonic
 from laser_spectrum import HARDCODED_LASER_PATH
 
 class SpectrumGUI:
     def __init__(self, root):
         self.root = root
         self.root.title("Spectra Plotting GUI")
-        # --- Multi-peak Fit Section ---
+       # --- Multi-peak Fit Section ---
         tk.Label(root, text="Multi-Harmonic Fit Ranges (min max order, comma-separated):").grid(row=21, column=0, columnspan=2)
         self.multi_fit_ranges = tk.Entry(root, width=50)
         self.multi_fit_ranges.grid(row=22, column=0, columnspan=2)
         self.multi_fit_ranges.insert(0, "500 530 6, 570 600 5, 630 670 4")  # example
         
+        # --- Model for Multi-Peak Fitting ---
         tk.Label(root, text="Model for Multi-Fit:").grid(row=23, column=0, sticky="e")
         self.multi_fit_model = ttk.Combobox(root, values=["Gaussian", "Lorentzian", "Voigt"])
         self.multi_fit_model.grid(row=23, column=1)
         self.multi_fit_model.current(0)
         
-        tk.Button(root, text="Run Multi-Fit", command=self.run_multi_fit).grid(row=24, column=0, columnspan=2, pady=5)
+        # --- FWHM vs Harmonic Fit Type ---
+        tk.Label(root, text="FWHM Fit for Sample Plot:").grid(row=24, column=0, sticky="e")
+        self.sample_fwhm_fit = ttk.Combobox(root, values=["exp_decay", "inv_sq", "inv_sqrt", "inv_n"])
+        self.sample_fwhm_fit.grid(row=24, column=1, sticky="w")
+        self.sample_fwhm_fit.set("exp_decay")
+        
+        # --- Run Button ---
+        tk.Button(root, text="Run Multi-Fit", command=self.run_multi_fit).grid(row=25, column=0, columnspan=2, pady=5)
 
 
         # --- Normalization Options ---
@@ -198,6 +206,8 @@ class SpectrumGUI:
                 air_iter=air_iter,
                 save_csv="multi_fit_results.csv"
             )
+            fit_type = self.sample_fwhm_fit.get()
+            plot_sample_fwhm_vs_harmonic(fit_type=fit_type)
     
         except Exception as e:
             messagebox.showerror("Multi-Fit Error", str(e))

@@ -63,7 +63,7 @@ def compute_z_score(label, ranges):
         return f"Sample '{label}' not found.\n"
 
     wl, sc, _ = read_scope_corrected(file_map[label])
-    noise = sc[wl <= 400]
+    noise = sc[wl <= 350]
     mean_n = noise.mean()
     std_n = noise.std()
     
@@ -73,10 +73,26 @@ def compute_z_score(label, ranges):
         if region.empty:
             results.append(f"{rmin}-{rmax} nm: No data\n")
             continue
-        peak = region.max()
-        z = (peak - mean_n) / std_n if std_n != 0 else float('inf')
+        wl_region = wl[(wl >= rmin) & (wl <= rmax)]
+        area = np.trapz(region, wl_region)
+        
+        # Estimate area over equal-length noise regions
+        noise_window = wl[(wl <= 350)]
+        noise_bandwidth = rmax - rmin
+        step = 1  # nm
+        noise_areas = []
+        for start in np.arange(noise_window.min(), noise_window.max() - noise_bandwidth, step):
+            end = start + noise_bandwidth
+            mask = (wl >= start) & (wl <= end)
+            if mask.sum() > 1:
+                noise_areas.append(np.trapz(sc[mask], wl[mask]))
+        
+        noise_area_mean = np.mean(noise_areas)
+        noise_area_std = np.std(noise_areas)
+        z = (area - noise_area_mean) / noise_area_std if noise_area_std != 0 else float('inf')
+
         status = "significant ✅" if z >= 3 else "not significant ❌"
-        results.append(f"{rmin}-{rmax} nm: Peak={peak:.2e}, Z={z:.2f} → {status}\n")
+        results.append(f"{rmin}-{rmax} nm: Area={area:.2e}, Z={z:.2f} → {status}\n")
     return "".join(results)
 
 # ----- GUI -----
