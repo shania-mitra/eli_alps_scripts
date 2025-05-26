@@ -45,16 +45,16 @@ TAB10 = [c for i, c in enumerate(plt.get_cmap("tab10").colors) if i != 3]  # Tab
 
 # Okabe-Ito: orange, sky blue, bluish green, blue, vermilion, reddish purple
 OKABE_ITO = [
-    "#E69F00",  # orange-yellow (keep)
-    "#56B4E9",  # sky blue
     "#009E73",  # bluish green
-    "#0072B2",  # blue
     "#D55E00",  # vermilion
-    "#CC79A7"   # reddish purple
+    "#CC79A7",  # reddish purple
+    "#000000",  # black
+    "#0173B2",  # dark blue
+    "#7A68A6"   # muted violet
 ]
 
-VIRIDIS = [mcolors.to_hex(plt.cm.viridis(i)) for i in np.linspace(0, 1, 10)]
-VIRIDIS = [c for c in VIRIDIS if not ("ffcc33" in c or "fdae61" in c or "fee08b" in c)]
+#VIRIDIS = [mcolors.to_hex(plt.cm.viridis(i)) for i in np.linspace(0, 1, 10)]
+#VIRIDIS = [c for c in VIRIDIS if not ("ffcc33" in c or "fdae61" in c or "fee08b" in c)]
 
 # Utility: get base sample (e.g. 'm1' from 'm1.2_NOBP_3000')
 def extract_base(label):
@@ -94,19 +94,19 @@ def assign_colors_for_plot(sample_list):
         return color_map
 
 
-    # Test Case 3: Same base and thickness, different intensities → Viridis
+    # Test Case 3: Same base and thickness, different intensities → use Okabe-Ito
     elif len(set(extract_intensity(lbl) for lbl in sample_list if "ZnOref" not in lbl)) > 1:
-        print("[DEBUG] Using Viridis color map for intensity variations")
-        intensities = [extract_intensity(lbl) for lbl in sample_list if "ZnOref" not in lbl]
-        norm = plt.Normalize(min(intensities), max(intensities))
-        scalar_map = plt.cm.ScalarMappable(norm=norm, cmap=ListedColormap(intensity_colours))
-        for label in sample_list:
-            if "ZnOref" in label:
-                continue
+        print("[DEBUG] Using Okabe-Ito color map for intensity variations")
+        valid_labels = [lbl for lbl in sample_list if "ZnOref" not in lbl]
+        intensities = sorted(set(extract_intensity(lbl) for lbl in valid_labels))
+        intensity_map = {i: OKABE_ITO[idx % len(OKABE_ITO)] for idx, i in enumerate(intensities)}
+    
+        for label in valid_labels:
             intensity = extract_intensity(label)
-            rgba = scalar_map.to_rgba(intensity)
-            color_map[label] = mcolors.to_hex(rgba)
+            color_map[label] = intensity_map.get(intensity, "#777777")
+    
         return color_map
+
 
     # Default Case 1: Fixed color per sample base
     print("[DEBUG] Using fixed global color map for base samples")

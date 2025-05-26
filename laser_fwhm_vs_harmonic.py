@@ -30,6 +30,17 @@ def compute_voigt_fwhm(x, y):
     fwhm = 0.5346 * 2 * gamma + np.sqrt(0.2166 * (2 * gamma) ** 2 + (2.3548 * sigma) ** 2)
     return fwhm
 
+
+def compute_voigt_fit(x, y):
+    model = VoigtModel()
+    center_guess = x[np.argmax(y)]
+    amp_guess = np.max(y)
+    sigma_guess = (x.max() - x.min()) / 20
+
+    params = model.make_params(amplitude=amp_guess, center=center_guess, sigma=sigma_guess, gamma=1.0)
+    result = model.fit(y, x=x, params=params)
+    return result  # Full lmfit.ModelResult
+
 def plot_laser_fwhm_vs_harmonic(fit_type, laser_path=HARDCODED_LASER_PATH, smooth_fit=True):
 
     
@@ -172,6 +183,15 @@ def plot_sample_fwhm_vs_harmonic(fit_type="exp_decay", csv_path="multi_fit_resul
 
     model, func = model_map[fit_type]
     result = model.fit(fwhms_all, n=orders_all, A=fwhms_all[0], B=0.1 if fit_type == "exp_decay" else None)
+        # Compute R^2
+    residuals = fwhms_all - result.best_fit
+    ss_res = np.sum(residuals ** 2)
+    ss_tot = np.sum((fwhms_all - np.mean(fwhms_all)) ** 2)
+    r_squared = 1 - (ss_res / ss_tot)
+    # --- Print R² to CLI ---
+    print(f"[R²] Fit type: '{fit_type}' → R² = {r_squared:.4f}")
+
+
     label_fit = f"Fit: {fit_type}, " + ", ".join(f"{k}={v:.2f}" for k, v in result.best_values.items())
 
     if smooth_fit:
