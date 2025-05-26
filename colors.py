@@ -12,6 +12,18 @@ import matplotlib.colors as mcolors
 import re
 from collections import Counter
 import numpy as np
+from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.colors import ListedColormap
+
+intensity_colours = [
+    "#020102",  # Night Rider
+    "#baafa3",  # Nomad
+    "#3037ff",  # Blue Ribbon
+    "#6bafff",  # Cornflower Blue
+   # "#f44f4f",  # Carnation
+    "#890c92",  # Purple
+    "#d80ad6",  # Purple Pizzazz
+]
 
 # Fixed base sample colors (legacy fallback if needed)
 sample_base_colors = {
@@ -83,11 +95,11 @@ def assign_colors_for_plot(sample_list):
 
 
     # Test Case 3: Same base and thickness, different intensities → Viridis
-    elif len(set(extract_intensity(lbl) for lbl in sample_list if "ZnOref" not in lbl)) > 1 and len(base_set) == 1:
+    elif len(set(extract_intensity(lbl) for lbl in sample_list if "ZnOref" not in lbl)) > 1:
         print("[DEBUG] Using Viridis color map for intensity variations")
         intensities = [extract_intensity(lbl) for lbl in sample_list if "ZnOref" not in lbl]
         norm = plt.Normalize(min(intensities), max(intensities))
-        scalar_map = plt.cm.ScalarMappable(norm=norm, cmap='viridis')
+        scalar_map = plt.cm.ScalarMappable(norm=norm, cmap=ListedColormap(intensity_colours))
         for label in sample_list:
             if "ZnOref" in label:
                 continue

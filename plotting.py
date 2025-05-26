@@ -83,7 +83,7 @@ def plot_selected_samples(sample_list, color_tags=None, save_as=None, range_min=
             sigma = g['fwhm'] / (2 * np.sqrt(2 * np.log(2)))
             x = np.linspace(g['min_wl'], g['max_wl'], 1000)
             y = g['amplitude'] * np.exp(-((x - g['center']) ** 2) / (2 * sigma ** 2))
-            ax.plot(x, y, '--', color='red', label=f"Gaussian @ {g['center']} nm")
+            ax.plot(x, y, '--', color=ROLE_COLORS["fit"], label=f"Gaussian @ {g['center']} nm")
 
     if show_laser and laser_path:
         try:

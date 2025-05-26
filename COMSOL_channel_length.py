@@ -49,6 +49,7 @@ ax.set_yscale('log')
 ax.set_xlabel(u'Length of Channel Sampled [ $\mu$m]', fontsize=PLOT_STYLE["xlabelsize"])
 ax.set_ylabel('Electric Field Norm [V/m]', fontsize=PLOT_STYLE["ylabelsize"])
 ax.set_ylim(1e-2)
+ax.set_xlim(0.1)
 
 # Styling
 ax.tick_params(axis='both', which='both',

@@ -4,6 +4,8 @@ import numpy as np
 from lmfit.models import GaussianModel, LorentzianModel, VoigtModel
 from spectra_io import read_scope_corrected, discover_files
 from baseline_correction import baseline_als, baseline_airpls
+from colors import assign_colors_for_plot, get_sample_description, ROLE_COLORS
+from plot_style import PLOT_STYLE
 
 def multi_peak_fit_extract_plot(label, ranges, harmonic_orders, model_type="Gaussian",
                                  no_norm=False, apply_baseline=False, baseline_method="ALS",
@@ -73,6 +75,7 @@ def multi_peak_fit_extract_plot(label, ranges, harmonic_orders, model_type="Gaus
             fwhm = float('nan')
 
         results.append({
+            "label": label,  # ← Add this line!
             "harmonic_order": order,
             "center": result.params["center"].value,
             "FWHM": fwhm,
@@ -80,17 +83,29 @@ def multi_peak_fit_extract_plot(label, ranges, harmonic_orders, model_type="Gaus
             "R_squared": r_squared
         })
 
-        # --- Plot with R² and χ² on it ---
-        plt.figure(figsize=(6, 4))
-        plt.plot(x, y, 'b.', label='Data')
-        plt.plot(x, result.best_fit, 'r-', label=f'{model_type} Fit')
 
-        plt.title(f"Harmonic {order}: {label}")
-        plt.xlabel("Wavelength [nm]")
-        plt.ylabel("Intensity")
-        plt.legend()
+        # --- Plot with R² and χ² on it ---
+        # Assign sample-specific color and label
+        colors = assign_colors_for_plot([label])
+        desc = get_sample_description(label)
+        
+        plt.figure(figsize=PLOT_STYLE["figsize"])
+        plt.plot(x, y, '.', label='Data', color=colors[label])
+        plt.plot(x, result.best_fit, '-', label=f'{model_type} Fit', color=ROLE_COLORS["fit"], linewidth=PLOT_STYLE["linewidth"])
+        
+        plt.title(f"Harmonic {order}: {desc}", fontsize=PLOT_STYLE["title_fontsize"])
+        plt.xlabel("Wavelength [nm]", fontsize=PLOT_STYLE["xlabelsize"])
+        plt.ylabel("Intensity", fontsize=PLOT_STYLE["ylabelsize"])
+        
+        plt.tick_params(axis='both', which='both',
+                        length=PLOT_STYLE["tick_length"],
+                        width=PLOT_STYLE["tick_width"],
+                        labelsize=PLOT_STYLE["labelsize"])
+        
+        plt.legend(fontsize=PLOT_STYLE["legend_fontsize"])
         plt.tight_layout()
         plt.show()
+
 
     if not results:
         print("[INFO] No successful fits.")
