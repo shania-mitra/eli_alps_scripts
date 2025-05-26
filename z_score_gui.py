@@ -57,7 +57,7 @@ def read_scope_corrected(filepath):
     scope_corrected = df.iloc[:, -1]
     return wavelengths, scope_corrected, integration_time
 
-def compute_z_score(label, ranges):
+def compute_z_score(label, ranges, method="peak"):
     file_map = discover_files()
     if label not in file_map:
         return f"Sample '{label}' not found.\n"
@@ -66,33 +66,24 @@ def compute_z_score(label, ranges):
     noise = sc[wl <= 350]
     mean_n = noise.mean()
     std_n = noise.std()
-    
+
     results = []
     for rmin, rmax in ranges:
         region = sc[(wl >= rmin) & (wl <= rmax)]
         if region.empty:
             results.append(f"{rmin}-{rmax} nm: No data\n")
             continue
-        wl_region = wl[(wl >= rmin) & (wl <= rmax)]
-        area = np.trapz(region, wl_region)
-        
-        # Estimate area over equal-length noise regions
-        noise_window = wl[(wl <= 350)]
-        noise_bandwidth = rmax - rmin
-        step = 1  # nm
-        noise_areas = []
-        for start in np.arange(noise_window.min(), noise_window.max() - noise_bandwidth, step):
-            end = start + noise_bandwidth
-            mask = (wl >= start) & (wl <= end)
-            if mask.sum() > 1:
-                noise_areas.append(np.trapz(sc[mask], wl[mask]))
-        
-        noise_area_mean = np.mean(noise_areas)
-        noise_area_std = np.std(noise_areas)
-        z = (area - noise_area_mean) / noise_area_std if noise_area_std != 0 else float('inf')
 
+        if method == "area":
+            x = wl[(wl >= rmin) & (wl <= rmax)]
+            peakval = np.trapz(region, x)
+        else:  # default to peak
+            peakval = region.max()
+
+        z = (peakval - mean_n) / std_n if std_n != 0 else float('inf')
         status = "significant ✅" if z >= 3 else "not significant ❌"
-        results.append(f"{rmin}-{rmax} nm: Area={area:.2e}, Z={z:.2f} → {status}\n")
+        results.append(f"{rmin}-{rmax} nm: {method.title()}={peakval:.2e}, Z={z:.2f} → {status}\n")
+
     return "".join(results)
 
 # ----- GUI -----
@@ -109,10 +100,15 @@ class ZScoreGUI:
         self.ranges_entry = tk.Entry(root, width=50)
         self.ranges_entry.grid(row=1, column=1)
 
-        self.result_box = tk.Text(root, height=12, width=70)
-        self.result_box.grid(row=3, column=0, columnspan=2, pady=10)
+        tk.Label(root, text="Z-score Method:").grid(row=2, column=0, sticky='e')
+        self.method_var = tk.StringVar(value="peak")
+        method_menu = tk.OptionMenu(root, self.method_var, "peak", "area")
+        method_menu.grid(row=2, column=1, sticky='w')
 
-        tk.Button(root, text="Check Significance", command=self.run_z_score).grid(row=2, column=0, columnspan=2, pady=5)
+        tk.Button(root, text="Check Significance", command=self.run_z_score).grid(row=3, column=0, columnspan=2, pady=5)
+
+        self.result_box = tk.Text(root, height=12, width=70)
+        self.result_box.grid(row=4, column=0, columnspan=2, pady=10)
 
     def run_z_score(self):
         label = self.sample_entry.get().strip()
@@ -133,7 +129,7 @@ class ZScoreGUI:
             messagebox.showerror("Invalid Range Format", str(e))
             return
 
-        output = compute_z_score(label, ranges)
+        output = compute_z_score(label, ranges, method=self.method_var.get())
         self.result_box.delete('1.0', tk.END)
         self.result_box.insert(tk.END, output)
 
